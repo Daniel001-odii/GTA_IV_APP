@@ -1,5 +1,5 @@
 import categoriesData from './categories.json';
-import cheatsData from './cheats.json';
+import { getActiveCheatDataset } from './cheatCodesConfig';
 import {
   CheatCategory,
   CheatCategoryId,
@@ -11,43 +11,37 @@ import {
 
 /**
  * Abstract data repository contract so a remote API or CMS can replace
- * the local JSON source later without modifying any UI screens.
+ * the local object source later without modifying any UI screens.
  */
 export interface CheatRepository {
   getAllCheats(): CheatCode[];
   getCheatById(id: string): CheatCode | undefined;
   getAllCategories(): CheatCategory[];
-  getVisibleCategories(options?: { demoPreviewMode?: boolean }): CheatCategory[];
+  getVisibleCategories(): CheatCategory[];
   getCategoryById(id: CheatCategoryId): CheatCategory | undefined;
   getFeaturedCheats(): CheatCode[];
   getPopularCheats(limit?: number): CheatCode[];
   getRelatedCheats(cheat: CheatCode, limit?: number): CheatCode[];
+  getCheatsByCategory(categoryId: CheatCategoryId): CheatCode[];
   queryCheats(params: {
     search?: string;
     category?: CheatCategoryId | 'all';
     platform?: PlatformId;
     sort?: SortOption;
     onlyAvailableOnPlatform?: boolean;
-    demoPreviewMode?: boolean;
   }): CheatCode[];
 }
 
 export interface ResolvedCheatInstruction {
   platform: PlatformId;
-  mode: 'verified' | 'demo' | 'unavailable';
+  mode: 'verified' | 'unavailable';
   buttons?: GamepadButtonId[];
   pcCommand?: string;
 }
 
-/**
- * Resolves the active instructions for a cheat on a specific platform.
- * Strictly returns real verified combinations when available, sample combinations
- * ONLY when Demo Preview Mode is explicitly enabled, and 'unavailable' otherwise.
- */
 export function resolveCheatInstruction(
   cheat: CheatCode,
-  platform: PlatformId,
-  demoPreviewMode: boolean
+  platform: PlatformId
 ): ResolvedCheatInstruction {
   if (cheat.verified && cheat.isAvailable) {
     if (platform === 'pc' && cheat.combinations.pc) {
@@ -69,26 +63,6 @@ export function resolveCheatInstruction(
     }
   }
 
-  if (demoPreviewMode && cheat.demoCombinations) {
-    if (platform === 'pc' && cheat.demoCombinations.pc) {
-      return {
-        platform,
-        mode: 'demo',
-        pcCommand: cheat.demoCombinations.pc,
-      };
-    }
-    if (platform !== 'pc') {
-      const demoButtons = cheat.demoCombinations[platform];
-      if (demoButtons && demoButtons.length > 0) {
-        return {
-          platform,
-          mode: 'demo',
-          buttons: demoButtons,
-        };
-      }
-    }
-  }
-
   return {
     platform,
     mode: 'unavailable',
@@ -101,7 +75,7 @@ export class LocalCheatRepository implements CheatRepository {
   private readonly categoryMap: Map<CheatCategoryId, CheatCategory>;
 
   constructor(
-    cheats: CheatCode[] = cheatsData as CheatCode[],
+    cheats: CheatCode[] = getActiveCheatDataset().cheats,
     categories: CheatCategory[] = categoriesData as CheatCategory[]
   ) {
     this.cheats = cheats;
@@ -122,25 +96,15 @@ export class LocalCheatRepository implements CheatRepository {
   }
 
   /**
-   * PRD Section 4.6: Only display categories for which verified cheat codes
-   * are available once verified codes exist in the dataset. In pre-launch mode
-   * (zero verified cheats in catalog) or Demo Preview Mode, returns categories
-   * containing catalog entries so players can still browse the upcoming tracker.
+   * Returns only categories that have available verified cheats.
    */
-  getVisibleCategories(options?: { demoPreviewMode?: boolean }): CheatCategory[] {
-    const hasAnyVerified = this.cheats.some((c) => c.verified && c.isAvailable);
-
-    if (hasAnyVerified && !options?.demoPreviewMode) {
-      const verifiedCategoryIds = new Set(
-        this.cheats
-          .filter((c) => c.verified && c.isAvailable)
-          .map((c) => c.category)
-      );
-      return this.categories.filter((cat) => verifiedCategoryIds.has(cat.id));
-    }
-
-    const populatedCategoryIds = new Set(this.cheats.map((c) => c.category));
-    return this.categories.filter((cat) => populatedCategoryIds.has(cat.id));
+  getVisibleCategories(): CheatCategory[] {
+    const verifiedCategoryIds = new Set(
+      this.cheats
+        .filter((c) => c.verified && c.isAvailable)
+        .map((c) => c.category)
+    );
+    return this.categories.filter((cat) => verifiedCategoryIds.has(cat.id));
   }
 
   getCategoryById(id: CheatCategoryId): CheatCategory | undefined {
@@ -166,12 +130,14 @@ export class LocalCheatRepository implements CheatRepository {
       .slice(0, limit);
   }
 
-  getCheatCountByCategory(categoryId: CheatCategoryId): number {
-    return this.cheats.filter((c) => c.category === categoryId).length;
+  getCheatsByCategory(categoryId: CheatCategoryId): CheatCode[] {
+    return this.cheats
+      .filter((c) => c.category === categoryId)
+      .sort((a, b) => b.popularityScore - a.popularityScore);
   }
 
-  hasAnyVerifiedCheats(): boolean {
-    return this.cheats.some((c) => c.verified && c.isAvailable);
+  getCheatCountByCategory(categoryId: CheatCategoryId): number {
+    return this.cheats.filter((c) => c.category === categoryId).length;
   }
 
   queryCheats(params: {
@@ -180,7 +146,6 @@ export class LocalCheatRepository implements CheatRepository {
     platform?: PlatformId;
     sort?: SortOption;
     onlyAvailableOnPlatform?: boolean;
-    demoPreviewMode?: boolean;
   }): CheatCode[] {
     const {
       search = '',
@@ -188,7 +153,6 @@ export class LocalCheatRepository implements CheatRepository {
       platform = 'playstation',
       sort = 'popularity',
       onlyAvailableOnPlatform = false,
-      demoPreviewMode = false,
     } = params;
 
     const normalizedQuery = search.trim().toLowerCase();
@@ -199,7 +163,7 @@ export class LocalCheatRepository implements CheatRepository {
       }
 
       if (onlyAvailableOnPlatform) {
-        const resolved = resolveCheatInstruction(cheat, platform, demoPreviewMode);
+        const resolved = resolveCheatInstruction(cheat, platform);
         if (resolved.mode === 'unavailable') {
           return false;
         }
@@ -211,6 +175,7 @@ export class LocalCheatRepository implements CheatRepository {
           cheat.title,
           cheat.shortDescription,
           cheat.description,
+          cheat.combinations.pc ?? '',
           categoryMeta?.name ?? '',
           categoryMeta?.shortName ?? '',
           ...cheat.keywords,

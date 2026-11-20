@@ -1,25 +1,63 @@
 {
   "expo": {
-    "name": "GTA_VI",
-    "slug": "GTA_VI",
+    "name": "GTA VI Cheat Codes",
+    "slug": "gta-vi-cheat-codes",
+    "scheme": "gtavicheats",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B0914",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.gtavicheats.companion"
     },
     "android": {
+      "package": "com.gtavicheats.companion",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#0B0914",
+        "foregroundImage": "./assets/adaptive-icon.png"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
+      "bundler": "metro",
+      "output": "single",
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-image",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0B0914",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511",
+          "delayAppMeasurementInit": true,
+          "optimizeInitialization": true,
+          "optimizeAdLoading": true,
+          "userTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you."
+        }
+      ]
+    ],
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "38aaa0ca-5f3e-42ff-b6a9-56d00e24ba28"
+      }
     }
   }
 }

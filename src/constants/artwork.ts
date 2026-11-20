@@ -1,7 +1,7 @@
-import { ImageSourcePropType } from 'react-native';
+import { ImageSource } from 'expo-image';
 import { ArtworkKey, PlatformMeta } from '../types/cheat';
 
-export const ARTWORK_SOURCES: Record<ArtworkKey, ImageSourcePropType> = {
+export const ARTWORK_SOURCES: Record<ArtworkKey, ImageSource> = {
   'hero-vice': require('../../assets/images/art/hero-vice.jpg'),
   'collage-cover': require('../../assets/images/art/collage-cover.jpg'),
   'convertible-skyline': require('../../assets/images/art/convertible-skyline.jpg'),
@@ -12,13 +12,13 @@ export const ARTWORK_SOURCES: Record<ArtworkKey, ImageSourcePropType> = {
 export const PLATFORMS: PlatformMeta[] = [
   {
     id: 'playstation',
-    label: 'PlayStation 5',
-    shortLabel: 'PS5',
+    label: 'PlayStation',
+    shortLabel: 'PS',
     inputType: 'controller',
   },
   {
     id: 'xbox',
-    label: 'Xbox Series X/S',
+    label: 'Xbox',
     shortLabel: 'Xbox',
     inputType: 'controller',
   },

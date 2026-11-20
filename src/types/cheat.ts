@@ -38,6 +38,7 @@ export type ArtworkKey =
 
 export type SortOption = 'popularity' | 'category' | 'alphabetical';
 export type ThemeMode = 'dark' | 'light';
+export type ButtonSizePreset = 'sm' | 'md' | 'lg';
 
 export interface CheatCombinations {
   playstation?: GamepadButtonId[];
@@ -66,11 +67,6 @@ export interface CheatCode {
   popularityScore: number;
   featured?: boolean;
   combinations: CheatCombinations;
-  /**
-   * Sample placeholder combinations displayed ONLY when the user explicitly
-   * enables Demo Preview Mode in Settings. Never presented as verified GTA VI codes.
-   */
-  demoCombinations?: CheatCombinations;
   verified: boolean;
   isAvailable: boolean;
   usageNote?: string;

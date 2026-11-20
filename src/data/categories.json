@@ -6,16 +6,16 @@
     "description": "Firearms loadouts, explosive rounds, melee modifiers, and ammo refills.",
     "imageKey": "collage-cover",
     "iconName": "Crosshair",
-    "accentColor": "#E85B4A"
+    "accentColor": "#FF4FA3"
   },
   {
     "id": "vehicles",
     "name": "Vehicles",
     "shortName": "Vehicles",
-    "description": "Instant spawns for Vice City exotics, watercraft, choppers, and street rides.",
+    "description": "Instant spawns for Vice City exotics, choppers, bikes, and street rides.",
     "imageKey": "convertible-skyline",
     "iconName": "Car",
-    "accentColor": "#F4B942"
+    "accentColor": "#FF7A3D"
   },
   {
     "id": "health-armor",
@@ -24,7 +24,7 @@
     "description": "Full vitality restores, heavy armor plating, and temporary invincibility.",
     "imageKey": "street-duo",
     "iconName": "Shield",
-    "accentColor": "#34D399"
+    "accentColor": "#2CE5E0"
   },
   {
     "id": "player-abilities",
@@ -33,25 +33,25 @@
     "description": "Super sprint, high jump, slow-motion targeting, and stamina boosts.",
     "imageKey": "hero-vice",
     "iconName": "Zap",
-    "accentColor": "#A78BFA"
+    "accentColor": "#9B5CFF"
   },
   {
     "id": "wanted-level",
     "name": "Wanted Level",
     "shortName": "Wanted",
-    "description": "Clear Vice-Dade PD heat or escalate directly to maximum wanted stars.",
+    "description": "Clear police heat or escalate directly to maximum wanted stars.",
     "imageKey": "convertible-skyline",
     "iconName": "Siren",
-    "accentColor": "#60A5FA"
+    "accentColor": "#FF4FA3"
   },
   {
     "id": "weather-environment",
     "name": "Weather & Environment",
     "shortName": "Weather",
-    "description": "Cycle tropical storms, neon sunsets, clear Vice skies, and low gravity.",
+    "description": "Cycle tropical storms, neon sunsets, clear Vice skies, and moon gravity.",
     "imageKey": "bay-jetskis",
     "iconName": "CloudSun",
-    "accentColor": "#38BDF8"
+    "accentColor": "#2CE5E0"
   },
   {
     "id": "gameplay-world",
@@ -60,15 +60,15 @@
     "description": "World physics, slow-motion gameplay, slippery tires, and chaotic modifiers.",
     "imageKey": "collage-cover",
     "iconName": "Globe",
-    "accentColor": "#FB7185"
+    "accentColor": "#9B5CFF"
   },
   {
     "id": "miscellaneous",
     "name": "Miscellaneous",
     "shortName": "Misc",
-    "description": "Parachutes, skyfall drops, and novelty Leonida sandbox toggles.",
+    "description": "Parachutes, skyfall drops, and novelty sandbox toggles.",
     "imageKey": "street-duo",
     "iconName": "Sparkles",
-    "accentColor": "#FBBF24"
+    "accentColor": "#FF7A3D"
   }
 ]

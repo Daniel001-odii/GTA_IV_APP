@@ -1,8 +1,8 @@
-import { ImageSourcePropType } from 'react-native';
+import { ImageSource } from 'expo-image';
 import { ControllerPlatform, GamepadButtonId } from '../types/cheat';
 
 export interface GamepadAssetMeta {
-  source: ImageSourcePropType;
+  source: ImageSource;
   /** Exact source pixel width / height from flat-gamepad-icons 300 DPI exports */
   aspectRatio: number;
   isWide: boolean;
