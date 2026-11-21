@@ -34,7 +34,15 @@ export type ArtworkKey =
   | 'collage-cover'
   | 'convertible-skyline'
   | 'street-duo'
-  | 'bay-jetskis';
+  | 'bay-jetskis'
+  | 'gta6-boobie-phone'
+  | 'gta6-real-dimez'
+  | 'gta6-lucia-training'
+  | 'gta6-jason-lucia'
+  | 'gta6-tuning'
+  | 'gta6-lucia-nightclub'
+  | 'gta6-vice-city-night'
+  | 'gta6-boat-party';
 
 export type SortOption = 'popularity' | 'category' | 'alphabetical';
 export type ThemeMode = 'dark' | 'light';
@@ -44,6 +52,7 @@ export interface CheatCombinations {
   playstation?: GamepadButtonId[];
   xbox?: GamepadButtonId[];
   pc?: string;
+  phone?: string;
 }
 
 export interface CheatCategory {
@@ -67,6 +76,7 @@ export interface CheatCode {
   popularityScore: number;
   featured?: boolean;
   combinations: CheatCombinations;
+  phoneNumber?: string;
   verified: boolean;
   isAvailable: boolean;
   usageNote?: string;

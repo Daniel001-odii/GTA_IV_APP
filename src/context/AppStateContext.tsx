@@ -7,6 +7,8 @@ import React, {
   useState,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getCheatDataset, CheatDatasetConfig, CheatDatasetKey } from '../data/cheatCodesConfig';
+import { getCheatRepository, LocalCheatRepository } from '../data/cheatRepository';
 import { getThemeColors, ThemeColors } from '../theme/tokens';
 import { ButtonSizePreset, PlatformId, ThemeMode } from '../types/cheat';
 
@@ -14,14 +16,22 @@ const STORAGE_KEYS = {
   PLATFORM: '@gtavi_cheats/preferred_platform',
   THEME: '@gtavi_cheats/theme_mode',
   BUTTON_SIZE: '@gtavi_cheats/button_size',
-  FAVORITES: '@gtavi_cheats/favorites',
+  FAVORITES_GTA5: '@gtavi_cheats/favorites_gta5',
+  FAVORITES_GTA6: '@gtavi_cheats/favorites_gta6',
+  /** Legacy fallback key for one-time migration */
+  FAVORITES_LEGACY: '@gtavi_cheats/favorites',
   RECENTLY_VIEWED: '@gtavi_cheats/recently_viewed',
+  ACTIVE_GAME: '@gtavi_cheats/active_game',
 } as const;
 
 const MAX_RECENTLY_VIEWED = 8;
 
 interface AppStateContextValue {
   hydrated: boolean;
+  activeGame: CheatDatasetKey;
+  setActiveGame: (game: CheatDatasetKey) => void;
+  activeDataset: CheatDatasetConfig;
+  repository: LocalCheatRepository;
   preferredPlatform: PlatformId;
   setPreferredPlatform: (platform: PlatformId) => void;
   buttonSize: ButtonSizePreset;
@@ -52,13 +62,19 @@ function isValidButtonSize(value: string | null): value is ButtonSizePreset {
   return value === 'sm' || value === 'md' || value === 'lg';
 }
 
+function isValidGame(value: string | null): value is CheatDatasetKey {
+  return value === 'gta5' || value === 'gta6';
+}
+
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
+  const [activeGame, setActiveGameState] = useState<CheatDatasetKey>('gta6');
   const [preferredPlatform, setPreferredPlatformState] =
     useState<PlatformId>('playstation');
   const [buttonSize, setButtonSizeState] = useState<ButtonSizePreset>('md');
   const [themeMode, setThemeModeState] = useState<ThemeMode>('dark');
-  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [gta5FavoriteIds, setGta5FavoriteIds] = useState<string[]>([]);
+  const [gta6FavoriteIds, setGta6FavoriteIds] = useState<string[]>([]);
   const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -69,13 +85,25 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           STORAGE_KEYS.PLATFORM,
           STORAGE_KEYS.THEME,
           STORAGE_KEYS.BUTTON_SIZE,
-          STORAGE_KEYS.FAVORITES,
+          STORAGE_KEYS.ACTIVE_GAME,
+          STORAGE_KEYS.FAVORITES_GTA5,
+          STORAGE_KEYS.FAVORITES_GTA6,
+          STORAGE_KEYS.FAVORITES_LEGACY,
           STORAGE_KEYS.RECENTLY_VIEWED,
         ]);
 
         if (!active) return;
 
         const map = new Map(entries);
+
+        const savedGame = map.get(STORAGE_KEYS.ACTIVE_GAME) ?? null;
+        if (isValidGame(savedGame)) {
+          setActiveGameState(savedGame);
+        } else {
+          // Default to GTA 6
+          setActiveGameState('gta6');
+        }
+
         const savedPlatform = map.get(STORAGE_KEYS.PLATFORM) ?? null;
         if (isValidPlatform(savedPlatform)) {
           setPreferredPlatformState(savedPlatform);
@@ -91,11 +119,29 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           setButtonSizeState(savedButtonSize);
         }
 
-        const savedFavorites = map.get(STORAGE_KEYS.FAVORITES);
-        if (savedFavorites) {
-          const parsed = JSON.parse(savedFavorites);
+        // Favorites for GTA 5 & migration from legacy
+        const savedGta5Favs = map.get(STORAGE_KEYS.FAVORITES_GTA5);
+        const legacyFavs = map.get(STORAGE_KEYS.FAVORITES_LEGACY);
+        if (savedGta5Favs) {
+          const parsed = JSON.parse(savedGta5Favs);
           if (Array.isArray(parsed)) {
-            setFavoriteIds(parsed.filter((id): id is string => typeof id === 'string'));
+            setGta5FavoriteIds(parsed.filter((id): id is string => typeof id === 'string'));
+          }
+        } else if (legacyFavs) {
+          const parsed = JSON.parse(legacyFavs);
+          if (Array.isArray(parsed)) {
+            const list = parsed.filter((id): id is string => typeof id === 'string');
+            setGta5FavoriteIds(list);
+            AsyncStorage.setItem(STORAGE_KEYS.FAVORITES_GTA5, JSON.stringify(list)).catch(() => {});
+          }
+        }
+
+        // Favorites for GTA 6
+        const savedGta6Favs = map.get(STORAGE_KEYS.FAVORITES_GTA6);
+        if (savedGta6Favs) {
+          const parsed = JSON.parse(savedGta6Favs);
+          if (Array.isArray(parsed)) {
+            setGta6FavoriteIds(parsed.filter((id): id is string => typeof id === 'string'));
           }
         }
 
@@ -125,6 +171,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const setActiveGame = useCallback((game: CheatDatasetKey) => {
+    setActiveGameState(game);
+    AsyncStorage.setItem(STORAGE_KEYS.ACTIVE_GAME, game).catch(() => {});
+  }, []);
+
   const setPreferredPlatform = useCallback((platform: PlatformId) => {
     setPreferredPlatformState(platform);
     AsyncStorage.setItem(STORAGE_KEYS.PLATFORM, platform).catch(() => {});
@@ -148,20 +199,37 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const favoriteIds = useMemo(() => {
+    return activeGame === 'gta6' ? gta6FavoriteIds : gta5FavoriteIds;
+  }, [activeGame, gta6FavoriteIds, gta5FavoriteIds]);
+
   const isFavorite = useCallback(
     (cheatId: string) => favoriteIds.includes(cheatId),
     [favoriteIds]
   );
 
-  const toggleFavorite = useCallback((cheatId: string) => {
-    setFavoriteIds((prev) => {
-      const next = prev.includes(cheatId)
-        ? prev.filter((id) => id !== cheatId)
-        : [cheatId, ...prev];
-      AsyncStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(next)).catch(() => {});
-      return next;
-    });
-  }, []);
+  const toggleFavorite = useCallback(
+    (cheatId: string) => {
+      if (activeGame === 'gta6') {
+        setGta6FavoriteIds((prev) => {
+          const next = prev.includes(cheatId)
+            ? prev.filter((id) => id !== cheatId)
+            : [cheatId, ...prev];
+          AsyncStorage.setItem(STORAGE_KEYS.FAVORITES_GTA6, JSON.stringify(next)).catch(() => {});
+          return next;
+        });
+      } else {
+        setGta5FavoriteIds((prev) => {
+          const next = prev.includes(cheatId)
+            ? prev.filter((id) => id !== cheatId)
+            : [cheatId, ...prev];
+          AsyncStorage.setItem(STORAGE_KEYS.FAVORITES_GTA5, JSON.stringify(next)).catch(() => {});
+          return next;
+        });
+      }
+    },
+    [activeGame]
+  );
 
   const recordRecentlyViewed = useCallback((cheatId: string) => {
     setRecentlyViewedIds((prev) => {
@@ -182,10 +250,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const colors = useMemo(() => getThemeColors(themeMode), [themeMode]);
+  const activeDataset = useMemo(() => getCheatDataset(activeGame), [activeGame]);
+  const repository = useMemo(() => getCheatRepository(activeGame), [activeGame]);
 
   const value = useMemo<AppStateContextValue>(
     () => ({
       hydrated,
+      activeGame,
+      setActiveGame,
+      activeDataset,
+      repository,
       preferredPlatform,
       setPreferredPlatform,
       buttonSize,
@@ -203,6 +277,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       hydrated,
+      activeGame,
+      setActiveGame,
+      activeDataset,
+      repository,
       preferredPlatform,
       setPreferredPlatform,
       buttonSize,
@@ -225,12 +303,22 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-function useAppState(): AppStateContextValue {
+export function useAppState(): AppStateContextValue {
   const ctx = useContext(AppStateContext);
   if (!ctx) {
     throw new Error('useAppState must be used within AppStateProvider');
   }
   return ctx;
+}
+
+export function useActiveGame() {
+  const { activeGame, setActiveGame, activeDataset, repository } = useAppState();
+  return { activeGame, setActiveGame, activeDataset, repository };
+}
+
+export function useCheatRepository() {
+  const { repository, activeGame } = useAppState();
+  return { repository, activeGame };
 }
 
 export function useTheme() {

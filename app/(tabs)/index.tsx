@@ -9,14 +9,13 @@ import { MagicStar, SearchStatus } from 'iconsax-react-nativejs';
 import { AdBannerSlot } from '../../src/components/AdBannerSlot';
 import { CheatCard } from '../../src/components/CheatCard';
 import { EmptyState } from '../../src/components/EmptyState';
+import { HeroGameDropdown } from '../../src/components/GameSwitcher';
 import { PlatformSelector } from '../../src/components/PlatformSelector';
 import { SearchBar } from '../../src/components/SearchBar';
 import { SkeletonCard } from '../../src/components/Skeleton';
 import { AD_PACING } from '../../src/config/admobConfig';
 import { ARTWORK_SOURCES } from '../../src/constants/artwork';
-import { usePreferences, useTheme } from '../../src/context/AppStateContext';
-import { getActiveCheatDataset } from '../../src/data/cheatCodesConfig';
-import { cheatRepository } from '../../src/data/cheatRepository';
+import { useActiveGame, usePreferences, useTheme } from '../../src/context/AppStateContext';
 import { FONTS, RADII, SPACING } from '../../src/theme/tokens';
 import { CheatCode } from '../../src/types/cheat';
 
@@ -33,20 +32,19 @@ export default function AllCheatsScreen() {
   const { colors } = useTheme();
   const { hydrated, preferredPlatform, setPreferredPlatform } =
     usePreferences();
+  const { activeGame, activeDataset, repository } = useActiveGame();
   const [search, setSearch] = useState('');
-
-  const activeDataset = useMemo(() => getActiveCheatDataset(), []);
 
   const cheats = useMemo(
     () =>
-      cheatRepository.queryCheats({
+      repository.queryCheats({
         search,
         category: 'all',
         platform: preferredPlatform,
         sort: 'popularity',
         onlyAvailableOnPlatform: true,
       }),
-    [search, preferredPlatform]
+    [repository, search, preferredPlatform]
   );
 
   const rows = useMemo<ListRow[]>(() => {
@@ -60,7 +58,9 @@ export default function AllCheatsScreen() {
     }
 
     if (cheats.length === 0) {
-      items.push({ kind: 'empty', id: 'empty-state' });
+      if (search.trim().length > 0) {
+        items.push({ kind: 'empty', id: 'empty-state' });
+      }
       return items;
     }
 
@@ -81,6 +81,11 @@ export default function AllCheatsScreen() {
     router.push(`/cheat/${cheat.id}`);
   };
 
+  const heroImageSource =
+    activeGame === 'gta6'
+      ? ARTWORK_SOURCES['gta6-boobie-phone']
+      : ARTWORK_SOURCES['hero-vice'];
+
   return (
     <View style={[styles.screen, { backgroundColor: colors.bgPrimary }]}>
       <FlatList
@@ -93,7 +98,7 @@ export default function AllCheatsScreen() {
         ListHeaderComponent={
           <View style={styles.heroContainer}>
             <Image
-              source={ARTWORK_SOURCES['hero-vice']}
+              source={heroImageSource}
               style={StyleSheet.absoluteFill}
               contentFit="cover"
               contentPosition="top"
@@ -116,21 +121,20 @@ export default function AllCheatsScreen() {
                 { paddingTop: Math.max(insets.top, 14) + 10 },
               ]}
             >
-              <View style={styles.datasetPill}>
-                <MagicStar size={13} color="#2CE5E0" variant="Bold" />
-                <Text style={styles.datasetPillText}>
-                  {activeDataset.badgeLabel.toUpperCase()} • {cheats.length} CODES
-                </Text>
-              </View>
+              <HeroGameDropdown cheatCount={cheats.length} />
 
               <Animated.View
                 entering={FadeInDown.duration(320)}
                 style={styles.heroTextBlock}
               >
-                <Text style={styles.heroEyebrow}>GRAND THEFT AUTO VI</Text>
+                <Text style={styles.heroEyebrow}>
+                  {activeDataset.gameTitle.toUpperCase()}
+                </Text>
                 <Text style={styles.heroTitle}>ALL CHEAT CODES</Text>
                 <Text style={styles.heroSubtitle}>
-                  Pick your platform below for instant controller combos or PC commands.
+                  {activeGame === 'gta6'
+                    ? 'Pull out phone (D-pad Up) + hold L1/LB + R1/RB to enter D-pad sequences.'
+                    : 'Pick your platform below for instant controller combos or PC commands.'}
                 </Text>
               </Animated.View>
             </View>
@@ -174,21 +178,12 @@ export default function AllCheatsScreen() {
           }
 
           if (item.kind === 'empty') {
+            if (!search.trim()) return null;
             return (
-              <View style={styles.rowPad}>
-                <EmptyState
-                  icon={
-                    <SearchStatus
-                      size={28}
-                      color={colors.accentSecondary}
-                      variant="Bulk"
-                    />
-                  }
-                  title="No Matching Cheats"
-                  description="Try searching by cheat name, keyword, or PC command like TURTLE, BUZZOFF, or COMET."
-                  actionLabel="Clear Search"
-                  onAction={() => setSearch('')}
-                />
+              <View style={styles.noResultsWrap}>
+                <Text style={[styles.noResultsText, { color: colors.textMuted }]}>
+                  No cheats matching "{search}"
+                </Text>
               </View>
             );
           }
@@ -287,5 +282,14 @@ const styles = StyleSheet.create({
   rowPad: {
     paddingHorizontal: SPACING.lg,
     marginBottom: 20,
+  },
+  noResultsWrap: {
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: 24,
+    alignItems: 'center',
+  },
+  noResultsText: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 14,
   },
 });

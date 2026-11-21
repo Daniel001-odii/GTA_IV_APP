@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -8,20 +9,26 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
+  ArrowRight2,
+  DocumentText,
   Game,
   InfoCircle,
   Lock,
   Moon,
+  ShieldSecurity,
+  Star1,
   Sun1,
 } from 'iconsax-react-nativejs';
 import { ControllerCombo } from '../../src/components/ControllerCombo';
+import { GameSegmentedControl } from '../../src/components/GameSwitcher';
 import { PlatformSelector } from '../../src/components/PlatformSelector';
-import { APP_INFO } from '../../src/constants/legal';
+import { APP_INFO, LEGAL_URLS } from '../../src/constants/legal';
 import { useAds } from '../../src/context/AdsContext';
 import { usePreferences, useTheme } from '../../src/context/AppStateContext';
 import { FONTS, RADII, SPACING } from '../../src/theme/tokens';
 import { ButtonSizePreset, GamepadButtonId } from '../../src/types/cheat';
 import { triggerSelectionHaptic } from '../../src/utils/haptics';
+import { requestAppRating } from '../../src/utils/storeReview';
 
 const BUTTON_SIZE_OPTIONS: { id: ButtonSizePreset; label: string }[] = [
   { id: 'sm', label: 'Small' },
@@ -80,6 +87,22 @@ export default function SettingsScreen() {
           value={preferredPlatform}
           onChange={setPreferredPlatform}
         />
+      </View>
+
+      {/* Active Game Library */}
+      <View
+        style={[
+          styles.section,
+          { borderBottomColor: colors.borderSubtle },
+        ]}
+      >
+        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
+          ACTIVE GAME LIBRARY
+        </Text>
+        <Text style={[styles.sectionDesc, { color: colors.textMuted }]}>
+          Switch between Grand Theft Auto VI (Leonida/Vice City) and Grand Theft Auto V (Los Santos).
+        </Text>
+        <GameSegmentedControl />
       </View>
 
       {/* Cheat Button Size Setting */}
@@ -258,13 +281,179 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {/* About & Disclaimer */}
+      {/* Rate & Review */}
       <View
         style={[
           styles.section,
           { borderBottomColor: colors.borderSubtle },
         ]}
       >
+        <View style={styles.iconHeading}>
+          <Star1 size={18} color="#FFB300" variant="Bold" />
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
+            RATE & REVIEW
+          </Text>
+        </View>
+        <Text style={[styles.sectionDesc, { color: colors.textMuted }]}>
+          Help us improve the companion app by sharing your rating and feedback.
+        </Text>
+
+        <Pressable
+          onPress={() => {
+            triggerSelectionHaptic();
+            requestAppRating();
+          }}
+          testID="rate-app-btn"
+          accessibilityRole="button"
+          accessibilityLabel="Rate GTA VI Cheat Codes on the App Store"
+          style={styles.menuRow}
+        >
+          <View style={styles.actionCardLeft}>
+            {/*  <View
+              style={[
+                styles.actionIconBox,
+                { backgroundColor: 'rgba(255, 179, 0, 0.14)' },
+              ]}
+            >
+              <Star1 size={20} color="#FFB300" variant="Bold" />
+            </View> */}
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={[styles.actionCardTitle, { color: colors.textPrimary }]}>
+                Rate GTA VI Cheats
+              </Text>
+              <Text style={[styles.actionCardSub, { color: colors.textSecondary }]}>
+                Leave a rating or review on the App Store
+              </Text>
+            </View>
+          </View>
+          <ArrowRight2 size={18} color={colors.textMuted} variant="Linear" />
+        </Pressable>
+      </View>
+
+      {/* Legal & Policies */}
+      <View
+        style={[
+          styles.section,
+          { borderBottomColor: colors.borderSubtle },
+        ]}
+      >
+        <View style={styles.iconHeading}>
+          <ShieldSecurity size={18} color={colors.accentCyan} variant="Bulk" />
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
+            LEGAL & POLICIES
+          </Text>
+        </View>
+        <Text style={[styles.sectionDesc, { color: colors.textMuted }]}>
+          View our transparent offline data practices, terms of service, and fan disclaimer.
+        </Text>
+
+        <View style={styles.legalLinksWrap}>
+          <Pressable
+            onPress={() => {
+              triggerSelectionHaptic();
+              Linking.openURL(LEGAL_URLS.privacyPolicy);
+            }}
+            accessibilityRole="link"
+            accessibilityLabel="Open Privacy Policy webpage"
+            style={styles.menuRow}
+          >
+            <View style={styles.actionCardLeft}>
+              {/*  <View
+                style={[
+                  styles.actionIconBox,
+                  { backgroundColor: 'rgba(44, 229, 224, 0.12)' },
+                ]}
+              >
+                <Lock size={18} color={colors.accentCyan} variant="Bulk" />
+              </View> */}
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={[styles.actionCardTitle, { color: colors.textPrimary }]}>
+                  Privacy Policy
+                </Text>
+                <Text style={[styles.actionCardSub, { color: colors.textSecondary }]}>
+                  Learn how your data & offline storage are protected
+                </Text>
+              </View>
+            </View>
+            <ArrowRight2 size={18} color={colors.textMuted} variant="Linear" />
+          </Pressable>
+
+          <View style={[styles.menuDivider, { backgroundColor: colors.borderSubtle }]} />
+
+          <Pressable
+            onPress={() => {
+              triggerSelectionHaptic();
+              Linking.openURL(LEGAL_URLS.termsOfUse);
+            }}
+            accessibilityRole="link"
+            accessibilityLabel="Open Terms of Use webpage"
+            style={styles.menuRow}
+          >
+            <View style={styles.actionCardLeft}>
+              {/* <View
+                style={[
+                  styles.actionIconBox,
+                  { backgroundColor: 'rgba(255, 79, 163, 0.12)' },
+                ]}
+              >
+                <DocumentText size={18} color={colors.accentPrimary} variant="Bulk" />
+              </View> */}
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={[styles.actionCardTitle, { color: colors.textPrimary }]}>
+                  Terms of Use
+                </Text>
+                <Text style={[styles.actionCardSub, { color: colors.textSecondary }]}>
+                  Unofficial fan guidelines, permitted use & legal disclaimers
+                </Text>
+              </View>
+            </View>
+            <ArrowRight2 size={18} color={colors.textMuted} variant="Linear" />
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Privacy Information */}
+      <View
+        style={[
+          styles.section,
+          { borderBottomColor: colors.borderSubtle },
+        ]}
+      >
+        <View style={styles.iconHeading}>
+          <Lock size={18} color={colors.accentCyan} variant="Bulk" />
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
+            PRIVACY & OFFLINE STORAGE
+          </Text>
+        </View>
+        <Text style={[styles.sectionDesc, { color: colors.textSecondary }]}>
+          {APP_INFO.privacySummary}
+        </Text>
+
+
+        {privacyOptionsRequired && (
+          <Pressable
+            onPress={() => {
+              triggerSelectionHaptic();
+              openPrivacyOptions();
+            }}
+            testID="manage-ad-privacy-btn"
+            style={[
+              styles.privacyBtn,
+              {
+                backgroundColor: colors.accentCyanMuted,
+                borderColor: colors.accentCyan,
+              },
+            ]}
+          >
+            <Text style={[styles.privacyBtnText, { color: colors.accentCyan }]}>
+              Manage Ad Privacy Preferences
+            </Text>
+          </Pressable>
+        )}
+      </View>
+
+      {/* About & Disclaimer */}
+      <View style={styles.lastSection}>
         <View style={styles.iconHeading}>
           <InfoCircle size={18} color={colors.accentPrimary} variant="Bulk" />
           <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
@@ -302,39 +491,6 @@ export default function SettingsScreen() {
             {APP_INFO.disclaimer}
           </Text>
         </View>
-      </View>
-
-      {/* Privacy Information */}
-      <View style={styles.lastSection}>
-        <View style={styles.iconHeading}>
-          <Lock size={18} color={colors.accentCyan} variant="Bulk" />
-          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
-            PRIVACY & OFFLINE STORAGE
-          </Text>
-        </View>
-        <Text style={[styles.sectionDesc, { color: colors.textSecondary }]}>
-          {APP_INFO.privacySummary}
-        </Text>
-        {privacyOptionsRequired && (
-          <Pressable
-            onPress={() => {
-              triggerSelectionHaptic();
-              openPrivacyOptions();
-            }}
-            testID="manage-ad-privacy-btn"
-            style={[
-              styles.privacyBtn,
-              {
-                backgroundColor: colors.accentCyanMuted,
-                borderColor: colors.accentCyan,
-              },
-            ]}
-          >
-            <Text style={[styles.privacyBtnText, { color: colors.accentCyan }]}>
-              Manage Ad Privacy Preferences
-            </Text>
-          </Pressable>
-        )}
       </View>
     </ScrollView>
   );
@@ -474,5 +630,40 @@ const styles = StyleSheet.create({
   privacyBtnText: {
     fontFamily: FONTS.bodySemiBold,
     fontSize: 13,
+  },
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+  },
+  menuDivider: {
+    height: StyleSheet.hairlineWidth,
+    width: '100%',
+  },
+  actionCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+    paddingRight: 8,
+  },
+  actionIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: RADII.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionCardTitle: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 14.5,
+  },
+  actionCardSub: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 12,
+  },
+  legalLinksWrap: {
+    gap: 2,
   },
 });

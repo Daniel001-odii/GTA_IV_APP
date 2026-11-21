@@ -17,8 +17,7 @@ import { CheatCard } from '../../src/components/CheatCard';
 import { EmptyState } from '../../src/components/EmptyState';
 import { PlatformSelector } from '../../src/components/PlatformSelector';
 import { SearchBar } from '../../src/components/SearchBar';
-import { usePreferences, useTheme } from '../../src/context/AppStateContext';
-import { cheatRepository } from '../../src/data/cheatRepository';
+import { useActiveGame, usePreferences, useTheme } from '../../src/context/AppStateContext';
 import { FONTS, RADII, SPACING } from '../../src/theme/tokens';
 import { CheatCategory, CheatCategoryId, CheatCode } from '../../src/types/cheat';
 import { triggerSelectionHaptic } from '../../src/utils/haptics';
@@ -34,10 +33,11 @@ export default function CategoriesScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { preferredPlatform, setPreferredPlatform } = usePreferences();
+  const { repository, activeGame } = useActiveGame();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CheatCategoryId | 'all'>('all');
 
-  const categories = useMemo(() => cheatRepository.getVisibleCategories(), []);
+  const categories = useMemo(() => repository.getVisibleCategories(), [repository]);
 
   const sections = useMemo<CategorySection[]>(() => {
     const filteredCategories =
@@ -47,7 +47,7 @@ export default function CategoriesScreen() {
 
     return filteredCategories
       .map((category) => {
-        const items = cheatRepository.queryCheats({
+        const items = repository.queryCheats({
           search,
           category: category.id,
           platform: preferredPlatform,
@@ -58,7 +58,7 @@ export default function CategoriesScreen() {
       })
       .filter((section) => section.data.length > 0)
       .map((section, sectionIndex) => ({ ...section, sectionIndex }));
-  }, [categories, selectedCategory, search, preferredPlatform]);
+  }, [repository, categories, selectedCategory, search, preferredPlatform]);
 
   const openCheat = (cheat: CheatCode) => {
     router.push(`/cheat/${cheat.id}`);
@@ -131,7 +131,7 @@ export default function CategoriesScreen() {
                 >
                   <CategoryCard
                     category={cat}
-                    count={cheatRepository.getCheatCountByCategory(cat.id)}
+                    count={repository.getCheatCountByCategory(cat.id)}
                     onPress={handleCategoryPress}
                   />
                 </View>
@@ -143,7 +143,7 @@ export default function CategoriesScreen() {
                 <Text style={[styles.activeFilterText, { color: colors.textSecondary }]}>
                   Showing category:{' '}
                   <Text style={{ color: colors.accentPrimary, fontFamily: FONTS.bodyBold }}>
-                    {cheatRepository.getCategoryById(selectedCategory)?.name}
+                    {repository.getCategoryById(selectedCategory)?.name}
                   </Text>
                 </Text>
                 <Pressable

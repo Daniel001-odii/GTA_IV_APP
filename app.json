@@ -10,7 +10,10 @@
     "backgroundColor": "#0B0914",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.gtavicheats.companion"
+      "bundleIdentifier": "com.gtavicheats.companion",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.gtavicheats.companion",
@@ -34,7 +37,7 @@
         {
           "backgroundColor": "#0B0914",
           "image": "./assets/splash-icon.png",
-          "imageWidth": 220
+          "imageWidth": 260
         }
       ],
       [

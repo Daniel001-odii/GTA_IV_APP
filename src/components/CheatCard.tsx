@@ -113,11 +113,11 @@ export function CheatCard({
           <FavoriteButton cheatId={cheat.id} size={18} />
         </View>
 
-        {showInlineCombo && resolved.mode === 'verified' && (
+        {showInlineCombo && (
           <View style={styles.comboStrip}>
-            {activePlatform === 'pc' && resolved.pcCommand ? (
+            {resolved.mode === 'verified' && activePlatform === 'pc' && resolved.pcCommand ? (
               <PcCommandDisplay command={resolved.pcCommand} compact />
-            ) : activePlatform !== 'pc' && resolved.buttons ? (
+            ) : resolved.mode === 'verified' && activePlatform !== 'pc' && resolved.buttons ? (
               <ControllerCombo
                 platform={activePlatform}
                 buttons={resolved.buttons}
@@ -126,6 +126,24 @@ export function CheatCard({
                 interactive={false}
                 showControls={false}
               />
+            ) : resolved.mode === 'tbd' ? (
+              <View style={styles.tbdBadge}>
+                <Text style={styles.tbdText}>PC: UNRELEASED</Text>
+              </View>
+            ) : cheat.phoneNumber ? (
+              <View
+                style={[
+                  styles.phoneBadge,
+                  {
+                    backgroundColor: colors.bgSecondary,
+                    borderColor: colors.borderSubtle,
+                  },
+                ]}
+              >
+                <Text style={[styles.phoneText, { color: colors.accentPrimary }]}>
+                  PHONE: {cheat.phoneNumber}
+                </Text>
+              </View>
             ) : null}
           </View>
         )}
@@ -187,5 +205,36 @@ const styles = StyleSheet.create({
   },
   comboStrip: {
     paddingTop: 2,
+  },
+  tbdBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADII.sm,
+    backgroundColor: 'rgba(255, 179, 0, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 179, 0, 0.35)',
+  },
+  tbdText: {
+    fontFamily: FONTS.monoBold,
+    fontSize: 10.5,
+    letterSpacing: 0.8,
+    color: '#FFB300',
+  },
+  phoneBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: RADII.sm,
+    borderWidth: 1,
+  },
+  phoneText: {
+    fontFamily: FONTS.monoBold,
+    fontSize: 11,
+    letterSpacing: 0.5,
   },
 });

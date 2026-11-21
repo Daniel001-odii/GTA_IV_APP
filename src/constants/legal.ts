@@ -8,6 +8,15 @@ export const APP_INFO = {
     'Cheat lookup, favorites, preferred platform, button size, and theme stay 100% on-device via local storage — no account or login required. Google AdMob may serve ads subject to your regional privacy and consent choices.',
 } as const;
 
+export const LEGAL_URLS = {
+  privacyPolicy:
+    'https://docs.google.com/document/d/1z9e3Z2UUHvKsJMizxmELa_AOFA34lLkYNr7kBwStCQw/preview#heading=h.privacy-policy',
+  termsOfUse:
+    'https://docs.google.com/document/d/1z9e3Z2UUHvKsJMizxmELa_AOFA34lLkYNr7kBwStCQw/preview#heading=h.terms-of-use',
+  documentDirect:
+    'https://docs.google.com/document/d/1z9e3Z2UUHvKsJMizxmELa_AOFA34lLkYNr7kBwStCQw/preview',
+} as const;
+
 export const OPEN_SOURCE_LICENSES = [
   {
     project: 'Flat Gamepad Icons',

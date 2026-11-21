@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import {
   ArrowLeft2,
+  Call,
   Clock,
   InfoCircle,
   Warning2,
@@ -28,13 +29,15 @@ import { StatusBadge } from '../../src/components/StatusBadge';
 import { ARTWORK_SOURCES, getPlatformMeta } from '../../src/constants/artwork';
 import { useAds } from '../../src/context/AdsContext';
 import {
+  useActiveGame,
   usePreferences,
   useRecentlyViewed,
   useTheme,
 } from '../../src/context/AppStateContext';
-import { getActiveCheatDataset } from '../../src/data/cheatCodesConfig';
+import { getCheatDataset } from '../../src/data/cheatCodesConfig';
 import {
-  cheatRepository,
+  findCheatAnywhere,
+  getCheatRepository,
   resolveCheatInstruction,
 } from '../../src/data/cheatRepository';
 import { FONTS, RADII, SPACING } from '../../src/theme/tokens';
@@ -48,13 +51,16 @@ export default function CheatDetailScreen() {
   const { preferredPlatform, setPreferredPlatform } = usePreferences();
   const { recordRecentlyViewed } = useRecentlyViewed();
   const { recordCheatDetailOpen } = useAds();
-  const activeDataset = useMemo(() => getActiveCheatDataset(), []);
   const recordedOpenIdRef = useRef<string | null>(null);
 
-  const cheat = useMemo(
-    () => (typeof id === 'string' ? cheatRepository.getCheatById(id) : undefined),
+  const found = useMemo(
+    () => (typeof id === 'string' ? findCheatAnywhere(id) : undefined),
     [id]
   );
+  const cheat = found?.cheat;
+  const game = found?.game ?? 'gta6';
+  const activeDataset = useMemo(() => getCheatDataset(game), [game]);
+  const cheatRepo = useMemo(() => getCheatRepository(game), [game]);
 
   useEffect(() => {
     if (cheat) {
@@ -91,8 +97,8 @@ export default function CheatDetailScreen() {
     );
   }
 
-  const category = cheatRepository.getCategoryById(cheat.category);
-  const relatedCheats = cheatRepository.getRelatedCheats(cheat, 4);
+  const category = cheatRepo.getCategoryById(cheat.category);
+  const relatedCheats = cheatRepo.getRelatedCheats(cheat, 4);
   const resolved = resolveCheatInstruction(cheat, preferredPlatform);
   const platformMeta = getPlatformMeta(preferredPlatform);
 
@@ -218,6 +224,69 @@ export default function CheatDetailScreen() {
             preferredPlatform === 'pc' &&
             resolved.pcCommand ? (
             <PcCommandDisplay command={resolved.pcCommand} />
+          ) : resolved.mode === 'tbd' ? (
+            <View style={styles.unavailableBox} testID="pending-verification-card">
+              <View
+                style={[
+                  styles.unavailableIcon,
+                  { backgroundColor: 'rgba(255, 179, 0, 0.16)' },
+                ]}
+              >
+                <Clock size={24} color="#FFB300" variant="Bulk" />
+              </View>
+              <Text
+                style={[styles.unavailableTitle, { color: colors.textPrimary }]}
+              >
+                PC Version Unreleased
+              </Text>
+              <Text
+                style={[
+                  styles.unavailableDesc,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                Grand Theft Auto VI has not yet released on PC. PC command codes will be added as soon as they become available.
+              </Text>
+            </View>
+          ) : cheat.phoneNumber ? (
+            <View style={styles.unavailableBox} testID="phone-dial-card">
+              <View
+                style={[
+                  styles.unavailableIcon,
+                  { backgroundColor: 'rgba(255, 75, 145, 0.16)' },
+                ]}
+              >
+                <Call size={24} color={colors.accentPrimary} variant="Bulk" />
+              </View>
+              <Text
+                style={[styles.unavailableTitle, { color: colors.textPrimary }]}
+              >
+                In-Game Phone Cheat
+              </Text>
+              <Text
+                style={[
+                  styles.unavailableDesc,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                This cheat is activated by opening your character's cell phone dial pad:
+              </Text>
+              <View
+                style={[
+                  styles.phonePill,
+                  {
+                    backgroundColor: colors.bgSecondary,
+                    borderColor: colors.borderSubtle,
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.phonePillText, { color: colors.accentPrimary }]}
+                >
+                  {cheat.phoneNumber}
+                </Text>
+              </View>
+            </View>
           ) : (
             <View style={styles.unavailableBox} testID="pending-verification-card">
               <View
@@ -259,6 +328,32 @@ export default function CheatDetailScreen() {
           <Text style={[styles.description, { color: colors.textPrimary }]}>
             {cheat.description}
           </Text>
+
+          {cheat.phoneNumber && (
+            <View
+              style={[
+                styles.phoneBox,
+                {
+                  backgroundColor: colors.bgSecondary,
+                  borderColor: colors.borderSubtle,
+                },
+              ]}
+            >
+              <Call size={18} color={colors.accentSecondary} variant="Bulk" />
+              <View style={styles.phoneContent}>
+                <Text
+                  style={[styles.phoneLabel, { color: colors.textSecondary }]}
+                >
+                  IN-GAME CELL PHONE NUMBER
+                </Text>
+                <Text
+                  style={[styles.phoneValue, { color: colors.textPrimary }]}
+                >
+                  {cheat.phoneNumber}
+                </Text>
+              </View>
+            </View>
+          )}
 
           <View
             style={[
@@ -416,6 +511,42 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyRegular,
     fontSize: 15,
     lineHeight: 23,
+  },
+  phonePill: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: RADII.md,
+    borderWidth: 1,
+    marginTop: 4,
+  },
+  phonePillText: {
+    fontFamily: FONTS.monoBold,
+    fontSize: 18,
+    letterSpacing: 1.2,
+    textAlign: 'center',
+  },
+  phoneBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: SPACING.md,
+    borderRadius: RADII.md,
+    borderWidth: 1,
+    marginTop: 4,
+  },
+  phoneContent: {
+    flex: 1,
+    gap: 2,
+  },
+  phoneLabel: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 10,
+    letterSpacing: 0.9,
+  },
+  phoneValue: {
+    fontFamily: FONTS.monoBold,
+    fontSize: 15,
+    letterSpacing: 0.8,
   },
   noteBox: {
     flexDirection: 'row',

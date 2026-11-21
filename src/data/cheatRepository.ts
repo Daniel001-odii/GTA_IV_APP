@@ -1,5 +1,9 @@
 import categoriesData from './categories.json';
-import { getActiveCheatDataset } from './cheatCodesConfig';
+import {
+  CHEAT_CODE_DATASETS,
+  CheatDatasetKey,
+  getActiveCheatDataset,
+} from './cheatCodesConfig';
 import {
   CheatCategory,
   CheatCategoryId,
@@ -34,7 +38,7 @@ export interface CheatRepository {
 
 export interface ResolvedCheatInstruction {
   platform: PlatformId;
-  mode: 'verified' | 'unavailable';
+  mode: 'verified' | 'unavailable' | 'tbd';
   buttons?: GamepadButtonId[];
   pcCommand?: string;
 }
@@ -44,22 +48,27 @@ export function resolveCheatInstruction(
   platform: PlatformId
 ): ResolvedCheatInstruction {
   if (cheat.verified && cheat.isAvailable) {
-    if (platform === 'pc' && cheat.combinations.pc) {
-      return {
-        platform,
-        mode: 'verified',
-        pcCommand: cheat.combinations.pc,
-      };
-    }
-    if (platform !== 'pc') {
-      const buttons = cheat.combinations[platform];
-      if (buttons && buttons.length > 0) {
+    if (platform === 'pc') {
+      if (cheat.combinations.pc) {
         return {
           platform,
           mode: 'verified',
-          buttons,
+          pcCommand: cheat.combinations.pc,
         };
       }
+      return {
+        platform,
+        mode: 'tbd',
+      };
+    }
+
+    const buttons = cheat.combinations[platform];
+    if (buttons && buttons.length > 0) {
+      return {
+        platform,
+        mode: 'verified',
+        buttons,
+      };
     }
   }
 
@@ -176,6 +185,8 @@ export class LocalCheatRepository implements CheatRepository {
           cheat.shortDescription,
           cheat.description,
           cheat.combinations.pc ?? '',
+          cheat.phoneNumber ?? '',
+          cheat.combinations.phone ?? '',
           categoryMeta?.name ?? '',
           categoryMeta?.shortName ?? '',
           ...cheat.keywords,
@@ -208,4 +219,25 @@ export class LocalCheatRepository implements CheatRepository {
   }
 }
 
-export const cheatRepository = new LocalCheatRepository();
+const repositories: Record<CheatDatasetKey, LocalCheatRepository> = {
+  gta5: new LocalCheatRepository(CHEAT_CODE_DATASETS.gta5.cheats),
+  gta6: new LocalCheatRepository(CHEAT_CODE_DATASETS.gta6.cheats),
+};
+
+export function getCheatRepository(game: CheatDatasetKey = 'gta6'): LocalCheatRepository {
+  return repositories[game] ?? repositories.gta6;
+}
+
+export function findCheatAnywhere(id: string): { cheat: CheatCode; game: CheatDatasetKey } | undefined {
+  const gta6Cheat = repositories.gta6.getCheatById(id);
+  if (gta6Cheat) {
+    return { cheat: gta6Cheat, game: 'gta6' };
+  }
+  const gta5Cheat = repositories.gta5.getCheatById(id);
+  if (gta5Cheat) {
+    return { cheat: gta5Cheat, game: 'gta5' };
+  }
+  return undefined;
+}
+
+export const cheatRepository = repositories.gta6;

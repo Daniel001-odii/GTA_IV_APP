@@ -11,6 +11,10 @@ export function triggerLightImpact() {
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
 }
 
+export function triggerImpactHaptic() {
+  triggerLightImpact();
+}
+
 export function triggerSuccessHaptic() {
   if (Platform.OS === 'web') return;
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
