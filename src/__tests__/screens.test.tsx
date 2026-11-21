@@ -47,6 +47,7 @@ describe('End-to-end screen integration tests', () => {
   });
 
   it('renders All screen with PS/Xbox/PC tabbed view, real GTA V cheats, and search empty state', async () => {
+    await AsyncStorage.setItem('@gtavi_cheats/active_game', 'gta5');
     const { getByText, getByTestId } = await render(
       <AppStateProvider>
         <AllCheatsScreen />
@@ -72,7 +73,7 @@ describe('End-to-end screen integration tests', () => {
     // Search empty state
     const input = getByTestId('all-search-input');
     await fireEvent.changeText(input, 'zzzzzz-not-a-cheat');
-    await waitFor(() => expect(getByText('No Matching Cheats')).toBeTruthy());
+    await waitFor(() => expect(getByText(/No cheats matching/i)).toBeTruthy());
   }, 15000);
 
   it('renders Categories screen with cheat codes grouped per category', async () => {
