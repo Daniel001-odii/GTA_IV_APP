@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "skills": {
+    "app-store-review": {
+      "source": "safaiyeh/app-store-review-skill",
+      "commit": "7197cff003728b660542b37d6b6d0167fe2ec1ed",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "6a4974f2927c37db3984d66f9ec10137209049f89d7453ebea0b33181363ead6"
+    }
+  }
+}
