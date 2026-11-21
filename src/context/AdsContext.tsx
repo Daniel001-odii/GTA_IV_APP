@@ -132,10 +132,13 @@ export function AdsProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    bootstrapAds();
+    const initTimer = setTimeout(() => {
+      bootstrapAds();
+    }, 500);
 
     return () => {
       active = false;
+      clearTimeout(initTimer);
       if (retryTimerRef.current) {
         clearTimeout(retryTimerRef.current);
       }

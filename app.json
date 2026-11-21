@@ -12,7 +12,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.gtavicheats.companion",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "GADApplicationIdentifier": "ca-app-pub-3940256099942544~1458002511",
+        "GADDelayAppMeasurementInit": true
       }
     },
     "android": {
@@ -62,5 +64,10 @@
         "projectId": "38aaa0ca-5f3e-42ff-b6a9-56d00e24ba28"
       }
     }
+  },
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-3940256099942544~3347511713",
+    "ios_app_id": "ca-app-pub-3940256099942544~1458002511",
+    "delay_app_measurement_init": true
   }
 }
