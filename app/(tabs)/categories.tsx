@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
+  Platform,
   Pressable,
   ScrollView,
   SectionList,
@@ -60,9 +61,29 @@ export default function CategoriesScreen() {
       .map((section, sectionIndex) => ({ ...section, sectionIndex }));
   }, [repository, categories, selectedCategory, search, preferredPlatform]);
 
-  const openCheat = (cheat: CheatCode) => {
-    router.push(`/cheat/${cheat.id}`);
-  };
+  const openCheat = useCallback(
+    (cheat: CheatCode) => {
+      router.push(`/cheat/${cheat.id}`);
+    },
+    [router]
+  );
+
+  const keyExtractor = useCallback((item: CheatCode) => item.id, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: CheatCode }) => (
+      <View style={styles.cardPad}>
+        <CheatCard
+          cheat={item}
+          platform={preferredPlatform}
+          showCategory={false}
+          showInlineCombo
+          onPress={openCheat}
+        />
+      </View>
+    ),
+    [preferredPlatform, openCheat]
+  );
 
   const handleCategoryPress = (category: CheatCategory) => {
     triggerSelectionHaptic();
@@ -81,9 +102,13 @@ export default function CategoriesScreen() {
     >
       <SectionList
         sections={sections}
-        keyExtractor={(item) => item.id}
+        keyExtractor={keyExtractor}
         stickySectionHeadersEnabled={false}
         showsVerticalScrollIndicator={false}
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
+        windowSize={5}
+        removeClippedSubviews={Platform.OS === 'ios'}
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
         ListHeaderComponent={
@@ -205,17 +230,7 @@ export default function CategoriesScreen() {
             </View>
           </View>
         )}
-        renderItem={({ item }) => (
-          <View style={styles.cardPad}>
-            <CheatCard
-              cheat={item}
-              platform={preferredPlatform}
-              showCategory={false}
-              showInlineCombo
-              onPress={openCheat}
-            />
-          </View>
-        )}
+        renderItem={renderItem}
         renderSectionFooter={({ section }) => {
           const isEverySecond = (section.sectionIndex + 1) % 2 === 0;
           const isFocusedSingle =

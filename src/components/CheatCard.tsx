@@ -27,7 +27,7 @@ interface CheatCardProps {
   showInlineCombo?: boolean;
 }
 
-export function CheatCard({
+export const CheatCard = React.memo(function CheatCard({
   cheat,
   onPress,
   platform,
@@ -74,7 +74,7 @@ export function CheatCard({
               style={styles.thumb}
               contentFit="cover"
               contentPosition="top"
-              transition={220}
+              transition={0}
               cachePolicy="memory-disk"
             />
             <LinearGradient
@@ -150,7 +150,7 @@ export function CheatCard({
       </Pressable>
     </Animated.View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

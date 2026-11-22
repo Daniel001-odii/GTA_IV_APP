@@ -172,23 +172,35 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setActiveGame = useCallback((game: CheatDatasetKey) => {
-    setActiveGameState(game);
-    AsyncStorage.setItem(STORAGE_KEYS.ACTIVE_GAME, game).catch(() => {});
+    setActiveGameState((prev) => {
+      if (prev === game) return prev;
+      AsyncStorage.setItem(STORAGE_KEYS.ACTIVE_GAME, game).catch(() => {});
+      return game;
+    });
   }, []);
 
   const setPreferredPlatform = useCallback((platform: PlatformId) => {
-    setPreferredPlatformState(platform);
-    AsyncStorage.setItem(STORAGE_KEYS.PLATFORM, platform).catch(() => {});
+    setPreferredPlatformState((prev) => {
+      if (prev === platform) return prev;
+      AsyncStorage.setItem(STORAGE_KEYS.PLATFORM, platform).catch(() => {});
+      return platform;
+    });
   }, []);
 
   const setButtonSize = useCallback((size: ButtonSizePreset) => {
-    setButtonSizeState(size);
-    AsyncStorage.setItem(STORAGE_KEYS.BUTTON_SIZE, size).catch(() => {});
+    setButtonSizeState((prev) => {
+      if (prev === size) return prev;
+      AsyncStorage.setItem(STORAGE_KEYS.BUTTON_SIZE, size).catch(() => {});
+      return size;
+    });
   }, []);
 
   const setThemeMode = useCallback((mode: ThemeMode) => {
-    setThemeModeState(mode);
-    AsyncStorage.setItem(STORAGE_KEYS.THEME, mode).catch(() => {});
+    setThemeModeState((prev) => {
+      if (prev === mode) return prev;
+      AsyncStorage.setItem(STORAGE_KEYS.THEME, mode).catch(() => {});
+      return mode;
+    });
   }, []);
 
   const toggleTheme = useCallback(() => {

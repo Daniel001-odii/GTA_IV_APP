@@ -56,6 +56,56 @@ const DETAIL_SIZES: Record<
   lg: { square: 54, wideWidth: 74, slotHeight: 70, slotMinWidth: 64, gap: 11, paddingH: 9 },
 };
 
+interface StaticButtonStepProps {
+  platform: ControllerPlatform;
+  button: GamepadButtonId;
+  index: number;
+  dims: (typeof CARD_SIZES)['md'];
+  chipBg: string;
+  chipBorder: string;
+}
+
+const StaticButtonStep = React.memo(function StaticButtonStep({
+  platform,
+  button,
+  index,
+  dims,
+  chipBg,
+  chipBorder,
+}: StaticButtonStepProps) {
+  const asset = getGamepadAsset(platform, button);
+  const imageWidth = asset.isWide ? dims.wideWidth : dims.square;
+  const imageHeight = Math.round(imageWidth / asset.aspectRatio);
+
+  return (
+    <View
+      accessibilityRole="image"
+      accessibilityLabel={`Step ${index + 1}: ${asset.label}`}
+      testID={`combo-step-${index}-${asset.assetName}`}
+      style={[
+        styles.stepPill,
+        styles.stepPillCompact,
+        {
+          minWidth: Math.max(dims.slotMinWidth, imageWidth + dims.paddingH * 2),
+          height: dims.slotHeight,
+          paddingHorizontal: dims.paddingH,
+          backgroundColor: chipBg,
+          borderColor: chipBorder,
+        },
+      ]}
+    >
+      <Image
+        source={asset.source}
+        style={{ width: imageWidth, height: imageHeight }}
+        contentFit="contain"
+        transition={0}
+        cachePolicy="memory-disk"
+        accessibilityLabel={asset.label}
+      />
+    </View>
+  );
+});
+
 interface ButtonStepProps {
   platform: ControllerPlatform;
   button: GamepadButtonId;
@@ -132,7 +182,7 @@ function ControllerButtonStep({
         source={asset.source}
         style={{ width: imageWidth, height: imageHeight }}
         contentFit="contain"
-        transition={120}
+        transition={0}
         cachePolicy="memory-disk"
         accessibilityLabel={asset.label}
       />
@@ -184,7 +234,7 @@ function ControllerButtonStep({
   );
 }
 
-export function ControllerCombo({
+export const ControllerCombo = React.memo(function ControllerCombo({
   platform,
   buttons,
   variant = 'detail',
@@ -200,6 +250,35 @@ export function ControllerCombo({
   const dims = isCompactCard
     ? CARD_SIZES[effectiveSize]
     : DETAIL_SIZES[effectiveSize];
+
+  if (isCompactCard && !interactive) {
+    return (
+      <View style={styles.wrapper} testID={`controller-combo-${platform}`}>
+        <View
+          testID="controller-combo-wrap"
+          style={[
+            styles.wrapGrid,
+            {
+              gap: dims.gap,
+              paddingTop: 2,
+            },
+          ]}
+        >
+          {buttons.map((button, index) => (
+            <StaticButtonStep
+              key={`${platform}-${button}-${index}`}
+              platform={platform}
+              button={button}
+              index={index}
+              dims={dims}
+              chipBg={colors.gamepadChipBg}
+              chipBorder={colors.gamepadChipBorder}
+            />
+          ))}
+        </View>
+      </View>
+    );
+  }
 
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [replayKey, setReplayKey] = useState(0);
@@ -331,7 +410,7 @@ export function ControllerCombo({
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   wrapper: {

@@ -139,8 +139,13 @@ export function GameLibraryDrawer({ visible, onClose }: GameLibraryDrawerProps) 
 
   const handleSelect = (id: CheatDatasetKey) => {
     triggerSelectionHaptic();
-    setActiveGame(id);
-    animateOut();
+    if (id === activeGame) {
+      animateOut();
+      return;
+    }
+    animateOut(() => {
+      setActiveGame(id);
+    });
   };
 
   if (!visible) return null;
@@ -325,8 +330,10 @@ export function GameSegmentedControl() {
           <Pressable
             key={game.id}
             onPress={() => {
-              triggerSelectionHaptic();
-              setActiveGame(game.id);
+              if (activeGame !== game.id) {
+                triggerSelectionHaptic();
+                setActiveGame(game.id);
+              }
             }}
             accessibilityRole="tab"
             accessibilityState={{ selected: isSelected }}

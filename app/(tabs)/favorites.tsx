@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { FlatList, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Heart } from 'iconsax-react-nativejs';
@@ -29,9 +29,27 @@ export default function FavoritesScreen() {
       .filter((c): c is CheatCode => Boolean(c));
   }, [favoriteIds, repository]);
 
-  const openCheat = (cheat: CheatCode) => {
-    router.push(`/cheat/${cheat.id}`);
-  };
+  const openCheat = useCallback(
+    (cheat: CheatCode) => {
+      router.push(`/cheat/${cheat.id}`);
+    },
+    [router]
+  );
+
+  const keyExtractor = useCallback((item: CheatCode) => item.id, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: CheatCode }) => (
+      <CheatCard
+        cheat={item}
+        platform={preferredPlatform}
+        showCategory
+        showInlineCombo
+        onPress={openCheat}
+      />
+    ),
+    [preferredPlatform, openCheat]
+  );
 
   return (
     <View
@@ -70,19 +88,15 @@ export default function FavoritesScreen() {
 
       <FlatList
         data={favoriteCheats}
-        keyExtractor={(item) => item.id}
+        keyExtractor={keyExtractor}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        windowSize={5}
+        removeClippedSubviews={Platform.OS === 'ios'}
         ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
-        renderItem={({ item }) => (
-          <CheatCard
-            cheat={item}
-            platform={preferredPlatform}
-            showCategory
-            showInlineCombo
-            onPress={openCheat}
-          />
-        )}
+        renderItem={renderItem}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <View

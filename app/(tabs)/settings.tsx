@@ -130,8 +130,10 @@ export default function SettingsScreen() {
               <Pressable
                 key={opt.id}
                 onPress={() => {
-                  triggerSelectionHaptic();
-                  setButtonSize(opt.id);
+                  if (buttonSize !== opt.id) {
+                    triggerSelectionHaptic();
+                    setButtonSize(opt.id);
+                  }
                 }}
                 testID={`button-size-${opt.id}`}
                 accessibilityRole="button"
@@ -193,8 +195,10 @@ export default function SettingsScreen() {
         <View style={styles.themeRow}>
           <Pressable
             onPress={() => {
-              triggerSelectionHaptic();
-              setThemeMode('dark');
+              if (themeMode !== 'dark') {
+                triggerSelectionHaptic();
+                setThemeMode('dark');
+              }
             }}
             testID="theme-dark-btn"
             style={[
@@ -237,8 +241,10 @@ export default function SettingsScreen() {
 
           <Pressable
             onPress={() => {
-              triggerSelectionHaptic();
-              setThemeMode('light');
+              if (themeMode !== 'light') {
+                triggerSelectionHaptic();
+                setThemeMode('light');
+              }
             }}
             testID="theme-light-btn"
             style={[

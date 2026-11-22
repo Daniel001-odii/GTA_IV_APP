@@ -106,6 +106,14 @@ export function PlatformSelector({
             onPress={() => {
               if (!isActive) {
                 triggerSelectionHaptic();
+                const idx = PLATFORMS.findIndex((p) => p.id === platform.id);
+                if (segmentWidth > 0 && idx >= 0) {
+                  translateX.value = withSpring(idx * segmentWidth, {
+                    damping: 18,
+                    stiffness: 220,
+                    mass: 0.8,
+                  });
+                }
                 onChange(platform.id);
               }
             }}

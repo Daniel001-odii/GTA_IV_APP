@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { FlatList, Platform, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -77,24 +77,114 @@ export default function AllCheatsScreen() {
     return items;
   }, [hydrated, cheats]);
 
-  const openCheat = (cheat: CheatCode) => {
-    router.push(`/cheat/${cheat.id}`);
-  };
+  const openCheat = useCallback(
+    (cheat: CheatCode) => {
+      router.push(`/cheat/${cheat.id}`);
+    },
+    [router]
+  );
+
+  const keyExtractor = useCallback((item: ListRow) => item.id, []);
 
   const heroImageSource =
     activeGame === 'gta6'
       ? ARTWORK_SOURCES['gta6-boobie-phone']
       : ARTWORK_SOURCES['hero-vice'];
 
+  const renderItem = useCallback(
+    ({ item }: { item: ListRow }) => {
+      if (item.kind === 'sticky-controls') {
+        return (
+          <View
+            testID="home-sticky-controls"
+            style={[
+              styles.stickyControls,
+              {
+                backgroundColor: colors.bgPrimary,
+                borderBottomColor: colors.borderSubtle,
+                paddingTop: Math.max(insets.top, 10),
+              },
+            ]}
+          >
+            <SearchBar
+              value={search}
+              onChangeText={setSearch}
+              placeholder="Search any cheat or PC command..."
+              testID="all-search-input"
+            />
+
+            <PlatformSelector
+              value={preferredPlatform}
+              onChange={setPreferredPlatform}
+            />
+          </View>
+        );
+      }
+
+      if (item.kind === 'skeleton') {
+        return (
+          <View style={styles.rowPad}>
+            <SkeletonCard />
+          </View>
+        );
+      }
+
+      if (item.kind === 'empty') {
+        if (!search.trim()) return null;
+        return (
+          <View style={styles.noResultsWrap}>
+            <Text style={[styles.noResultsText, { color: colors.textMuted }]}>
+              No cheats matching "{search}"
+            </Text>
+          </View>
+        );
+      }
+
+      if (item.kind === 'ad') {
+        return (
+          <View style={styles.rowPad}>
+            <AdBannerSlot placement={item.id} />
+          </View>
+        );
+      }
+
+      return (
+        <View style={styles.rowPad}>
+          <CheatCard
+            cheat={item.cheat}
+            platform={preferredPlatform}
+            showCategory={false}
+            showInlineCombo
+            onPress={openCheat}
+          />
+        </View>
+      );
+    },
+    [
+      colors.bgPrimary,
+      colors.borderSubtle,
+      colors.textMuted,
+      insets.top,
+      search,
+      preferredPlatform,
+      setPreferredPlatform,
+      openCheat,
+    ]
+  );
+
   return (
     <View style={[styles.screen, { backgroundColor: colors.bgPrimary }]}>
       <FlatList
         data={rows}
-        keyExtractor={(item) => item.id}
+        keyExtractor={keyExtractor}
         stickyHeaderIndices={[1]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        windowSize={5}
+        removeClippedSubviews={Platform.OS === 'ios'}
         ListHeaderComponent={
           <View style={styles.heroContainer}>
             <Image
@@ -140,74 +230,7 @@ export default function AllCheatsScreen() {
             </View>
           </View>
         }
-        renderItem={({ item }) => {
-          if (item.kind === 'sticky-controls') {
-            return (
-              <View
-                testID="home-sticky-controls"
-                style={[
-                  styles.stickyControls,
-                  {
-                    backgroundColor: colors.bgPrimary,
-                    borderBottomColor: colors.borderSubtle,
-                    paddingTop: Math.max(insets.top, 10),
-                  },
-                ]}
-              >
-                <SearchBar
-                  value={search}
-                  onChangeText={setSearch}
-                  placeholder="Search any cheat or PC command..."
-                  testID="all-search-input"
-                />
-
-                <PlatformSelector
-                  value={preferredPlatform}
-                  onChange={setPreferredPlatform}
-                />
-              </View>
-            );
-          }
-
-          if (item.kind === 'skeleton') {
-            return (
-              <View style={styles.rowPad}>
-                <SkeletonCard />
-              </View>
-            );
-          }
-
-          if (item.kind === 'empty') {
-            if (!search.trim()) return null;
-            return (
-              <View style={styles.noResultsWrap}>
-                <Text style={[styles.noResultsText, { color: colors.textMuted }]}>
-                  No cheats matching "{search}"
-                </Text>
-              </View>
-            );
-          }
-
-          if (item.kind === 'ad') {
-            return (
-              <View style={styles.rowPad}>
-                <AdBannerSlot placement={item.id} />
-              </View>
-            );
-          }
-
-          return (
-            <View style={styles.rowPad}>
-              <CheatCard
-                cheat={item.cheat}
-                platform={preferredPlatform}
-                showCategory={false}
-                showInlineCombo
-                onPress={openCheat}
-              />
-            </View>
-          );
-        }}
+        renderItem={renderItem}
       />
     </View>
   );
